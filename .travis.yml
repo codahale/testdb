@@ -1,8 +1,7 @@
 language: go
 services: mysql
 go:
-  - 1.3
-  - tip
+  - 1.3.3
 install: go get -v -t ./...
 script: MYSQL_DB="root:@/" go test -v ./...
 notifications:
