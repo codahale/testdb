@@ -3,9 +3,9 @@
 package testdb
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"fmt"
-	"math/rand"
 	"os"
 )
 
@@ -18,8 +18,12 @@ type TestDB struct {
 
 // Open creates a new TestDB given the driver name and the data source name.
 func Open(driverName, dataSourceName string) (*TestDB, error) {
-	name := fmt.Sprintf("tmpdb_%d", rand.Uint32())
+	buf := make([]byte, 8)
+	if _, err := rand.Read(buf); err != nil {
+		return nil, err
+	}
 
+	name := fmt.Sprintf("tmpdb_%016X", buf)
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
