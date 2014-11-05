@@ -40,6 +40,11 @@ func Open(driverName, dataSourceName string) (*TestDB, error) {
 	return &TestDB{name: name, DB: db}, nil
 }
 
+// Name gets the name of the created test database
+func (tdb *TestDB) Name() string {
+	return tdb.name
+}
+
 // Close drops the testing databases and disconnects from the server.
 //
 // N.B.: Not calling this will result in your database server accumulating many
