@@ -1,6 +1,7 @@
 package testdb_test
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/codahale/testdb"
@@ -8,7 +9,15 @@ import (
 )
 
 func Example() {
-	db, err := testdb.Open("mysql", testdb.Env("MYSQL_DB", testdb.LocalMySQL))
+	baseDSN := testdb.Env("MYSQL_DB", testdb.LocalMySQL)
+
+	tdb, err := testdb.Open("mysql", baseDSN)
+	if err != nil {
+		panic(err)
+	}
+	defer tdb.Close()
+
+	db, err := sql.Open("mysql", baseDSN+tdb.Name())
 	if err != nil {
 		panic(err)
 	}
