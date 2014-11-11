@@ -13,7 +13,7 @@ import (
 type TestDB struct {
 	name string
 
-	*sql.DB
+	db *sql.DB
 }
 
 // Open creates a new TestDB given the driver name and the data source name.
@@ -23,7 +23,7 @@ func Open(driverName, dataSourceName string) (*TestDB, error) {
 		return nil, err
 	}
 
-	name := fmt.Sprintf("tmpdb_%016X", buf)
+	name := fmt.Sprintf("tmpdb_%016x", buf)
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
@@ -33,11 +33,7 @@ func Open(driverName, dataSourceName string) (*TestDB, error) {
 		return nil, err
 	}
 
-	if _, err := db.Exec("USE " + name); err != nil {
-		return nil, err
-	}
-
-	return &TestDB{name: name, DB: db}, nil
+	return &TestDB{name: name, db: db}, nil
 }
 
 // Name gets the name of the created test database
@@ -50,10 +46,10 @@ func (tdb *TestDB) Name() string {
 // N.B.: Not calling this will result in your database server accumulating many
 // databases.
 func (tdb *TestDB) Close() error {
-	if _, err := tdb.DB.Exec("DROP DATABASE " + tdb.name); err != nil {
+	if _, err := tdb.db.Exec("DROP DATABASE " + tdb.name); err != nil {
 		return err
 	}
-	return tdb.DB.Close()
+	return tdb.db.Close()
 }
 
 // Env returns an environment variable, or if the environment variable is not
