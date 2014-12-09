@@ -9,9 +9,12 @@ import (
 	"os"
 )
 
+const termConns = "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname=$1"
+
 // TestDB is a temporary database for testing.
 type TestDB struct {
-	name string
+	name   string
+	driver string
 
 	db *sql.DB
 }
@@ -33,7 +36,7 @@ func Open(driverName, dataSourceName string) (*TestDB, error) {
 		return nil, err
 	}
 
-	return &TestDB{name: name, db: db}, nil
+	return &TestDB{name: name, driver: driverName, db: db}, nil
 }
 
 // Name gets the name of the created test database
@@ -46,6 +49,13 @@ func (tdb *TestDB) Name() string {
 // N.B.: Not calling this will result in your database server accumulating many
 // databases.
 func (tdb *TestDB) Close() error {
+	if tdb.driver == "postgres" {
+		// Postgres will not drop a database with outstanding connections.
+		if _, err := tdb.db.Exec(termConns, tdb.name); err != nil {
+			return err
+		}
+	}
+
 	if _, err := tdb.db.Exec("DROP DATABASE " + tdb.name); err != nil {
 		return err
 	}
