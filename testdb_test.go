@@ -5,25 +5,25 @@ import (
 	"fmt"
 
 	"github.com/codahale/testdb"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 func Example() {
-	baseDSN := testdb.Env("MYSQL_DB", testdb.LocalMySQL)
+	baseDSN := testdb.Env("PG_DB", "sslmode=disable")
 
-	tdb, err := testdb.Open("mysql", baseDSN)
+	tdb, err := testdb.Open("postgres", baseDSN+" dbname=postgres")
 	if err != nil {
 		panic(err)
 	}
 	defer tdb.Close()
 
-	db, err := sql.Open("mysql", baseDSN+tdb.Name())
+	db, err := sql.Open("postgres", baseDSN+" dbname="+tdb.Name())
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
 
-	if _, err := db.Exec(`CREATE TABLE things(id INT AUTO_INCREMENT, PRIMARY KEY (id))`); err != nil {
+	if _, err := db.Exec(`CREATE TABLE things(id SERIAL, PRIMARY KEY (id))`); err != nil {
 		panic(err)
 	}
 
@@ -34,7 +34,7 @@ func Example() {
 
 	fmt.Println(count)
 
-	if _, err := db.Exec(`INSERT INTO things () VALUES ()`); err != nil {
+	if _, err := db.Exec(`INSERT INTO things DEFAULT VALUES`); err != nil {
 		panic(err)
 	}
 

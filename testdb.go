@@ -9,6 +9,8 @@ import (
 	"os"
 )
 
+const termConns = "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname=$1"
+
 // TestDB is a temporary database for testing.
 type TestDB struct {
 	name string
@@ -46,6 +48,11 @@ func (tdb *TestDB) Name() string {
 // N.B.: Not calling this will result in your database server accumulating many
 // databases.
 func (tdb *TestDB) Close() error {
+	// Postgres will not drop a database with outstanding connections.
+	if _, err := tdb.db.Exec(termConns, tdb.name); err != nil {
+		return err
+	}
+
 	if _, err := tdb.db.Exec("DROP DATABASE " + tdb.name); err != nil {
 		return err
 	}
@@ -60,9 +67,3 @@ func Env(key, defaultValue string) string {
 	}
 	return defaultValue
 }
-
-const (
-	// LocalMySQL is the DSN for a basic install of MySQL accepting
-	// unauthenticated connections for the root user on the default Unix socket.
-	LocalMySQL = "root:@unix()/"
-)
